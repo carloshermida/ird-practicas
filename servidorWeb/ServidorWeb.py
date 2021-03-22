@@ -24,6 +24,8 @@ def web(newSocket, direccion):
     c_200 = "HTTP/1.0 200 OK"
     c_400 = "HTTP/1.0 400 Bad Request"
     c_404 = "HTTP/1.0 404 Not Found"
+    # Inicializamos una variable que será útil posteriormente
+    tmp = 0
     # Recibimos el mensaje y lo dividimos en los saltos de línea
     mensaje  = newSocket.recv(4096).decode("UTF-8").split("\n")
     print("Recibido mensaje: {} de: {}:{}".format(mensaje, direccion[0], direccion[1]))
@@ -51,15 +53,40 @@ def web(newSocket, direccion):
             # Para el método HEAD, proporcionamos solamente las cabeceras
             if metodo == "HEAD":
                 respuesta = str("{}\nDate: {}\nServer: {}\nContent-Length: {}\nContent-Type: {}\nLast-Modified: {}".format(c_200, fecha, server, contenido_tamaño, filetype(url), contenido_ultima_mod))
+            # Para el método GET, enviamos también el contenido
+            elif metodo == "GET":
+                # Varía la manera de proceder según el tipo de archivo
+                if url.endswith(".txt") or url.endswith("htm") or url.endswith("html"):
+                    # Texto:
+                    with open(url, 'r') as f:
+                        contenido = f.read()
+                    respuesta = str("{}\nDate: {}\nServer: {}\nContent-Length: {}\nContent-Type: {}\nLast-Modified: {}\n\n{}".format(c_200, fecha, server, contenido_tamaño, filetype(url), contenido_ultima_mod, contenido))   
+                elif url.endswith(".jpg") or url.endswith(".jpeg") or url.endswith(".gif"):       
+                    # Imagen:
+                    with open(url, 'rb') as f:
+                        contenido = f.read()
+                    # Creamos una variable temporal para, posteriormente, poder enviar el contenido de forma separada.
+                    tmp = 1
+                    respuesta = str("{}\nDate: {}\nServer: {}\nContent-Length: {}\nContent-Type: {}\nLast-Modified: {}\n\n".format(c_200, fecha, server, contenido_tamaño, filetype(url), contenido_ultima_mod))
+                else:
+                    # Fichero en formato desconocido:
+                    # El contenido no se puede leer
+                    contenido = "Formato no soportado"
+                    respuesta = str("{}\nDate: {}\nServer: {}\nContent-Length: {}\nContent-Type: {}\nLast-Modified: {}\n\n{}".format(c_200, fecha, server, contenido_tamaño, filetype(url), contenido_ultima_mod, contenido))   
             # Para cualquier otro método, error 400
             else:
-                respuesta = str(c_400 + "\nDate: " + fecha + "\nServer: " + server)  
+                respuesta = str(c_400 + "\nDate: " + fecha + "\nServer: " + server)   
         # Como la url no contiene "." , entendemos que nos esta pidiendo un directorio
         else:
             respuesta = str(c_400 + "\nDate: " + fecha + "\nServer: " + server)
     # Enviamos la respuesta
     newSocket.send(respuesta.encode("UTF-8"))
-    print("Enviada respuesta: {} a: {}:{}".format(respuesta,direccion[0], direccion[1]))
+    print("Enviada respuesta: {}".format(respuesta))
+    # Distinguimos el caso de una imagen (dos envíos)
+    if tmp == 1:
+        newSocket.send(contenido)
+        print("El contenido de la imagen es :", contenido)
+    print("a: {}:{}".format(direccion[0], direccion[1]))
     # Nos desconectamos del cliente
     newSocket.close()
     print("Desconectado de {}:{}".format(direccion[0], direccion[1]))
