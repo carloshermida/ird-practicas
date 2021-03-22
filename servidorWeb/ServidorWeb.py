@@ -37,7 +37,7 @@ def web(newSocket, direccion):
          respuesta = str(c_400 + "\nDate: " + fecha + "\nServer: " + server)
     else:
         # Asignamos cada uno de los campos de la peticion
-        url = peticion[1]
+        metodo, url = peticion[0], peticion[1]
         # Añadimos a la url la dirección donde se encuentra el archivo solicitado
         url = str("data" + url)
         # Comprobamos que existe el recurso solicitado
@@ -45,7 +45,15 @@ def web(newSocket, direccion):
             respuesta = str(c_404 + "\nDate: " + fecha + "\nServer: " + server)  
         # Comprobamos que es la url de un archivo
         elif (".") in url:
-            respuesta = str(c_200 + "\nDate: " + fecha + "\nServer: " + server)
+            # Obtenemos su tamaño y la fecha de última modificación 
+            contenido_ultima_mod = datetime.datetime.fromtimestamp(os.path.getmtime(url)).strftime("%a, %d %b %Y %H:%M:%S %Z")
+            contenido_tamaño = str(os.path.getsize(url))
+            # Para el método HEAD, proporcionamos solamente las cabeceras
+            if metodo == "HEAD":
+                respuesta = str("{}\nDate: {}\nServer: {}\nContent-Length: {}\nContent-Type: {}\nLast-Modified: {}".format(c_200, fecha, server, contenido_tamaño, filetype(url), contenido_ultima_mod))
+            # Para cualquier otro método, error 400
+            else:
+                respuesta = str(c_400 + "\nDate: " + fecha + "\nServer: " + server)  
         # Como la url no contiene "." , entendemos que nos esta pidiendo un directorio
         else:
             respuesta = str(c_400 + "\nDate: " + fecha + "\nServer: " + server)
