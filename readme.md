@@ -1,4 +1,4 @@
-### Prácticas IRD - [[Changelog]](https://github.com/carloshermida/ird-practicas/blob/main/changelog.md#changelog)
+### Prácticas IRD - [[Changelog]](https://github.com/carloshermida/ird-practicas/blob/master/changelog.md#changelog)
 ##### Curso 2020/2021
 
 Este repositorio contiene las prácticas de la asignatura _Internet, Redes y Datos_ del grado en _Ciencia e Ingeniería de Datos_ de la _Universidad de Coruña_.
